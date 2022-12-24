@@ -1,0 +1,1 @@
+<q-btn label="<?= $params->get("title") ?>" <?= ($params->get("icon")? "icon=\"". $params->get("icon")."\"":"") ?> @click="<?= $params->get("action") ?>" class="<?= $params->get("class") ?>" <?= $params->get("tag_params") ?>></q-btn>

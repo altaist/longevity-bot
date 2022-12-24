@@ -1,0 +1,8 @@
+web/
+web/css/
+web/files/
+web/img/
+web/js/
+expertix/uploads
+expertix/runtime
+expertix/app/projects/longevity/config/system.cfg.php

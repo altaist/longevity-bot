@@ -1,0 +1,11 @@
+$userId = $request->get('userId');
+$orderKey = $request->get('orderKey');
+$operatorId = $request->get('operatorId');
+$companyId = $request->get('companyId');
+$src = $request->get('src');
+$comments = $request->get('comments');
+$state = $request->get('state');
+
+$sql = "select 1, userId, orderKey, operatorId, companyId, src, comments, state from store_order ";
+
+$sql = "insert into store_order(userId, orderKey, operatorId, companyId, src, comments, state ) values(?, ?, ?, ?, ?, ?, ? );

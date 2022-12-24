@@ -1,0 +1,85 @@
+<?php
+$color = $params->get("color", "primary");
+?>
+
+<div class="my-5">
+	<div class="my-3">
+		<div v-if="user && user.userKey">
+			<div class="text-center">
+				<a href="lk" class="title4">Profile</a>
+			</div>
+		</div>
+		<div v-else>
+
+			<div class="row q-col-gutter-sm" v-if="login.screen=='signup'">
+				<div class="col-12">
+					<div class="text-h4 text-<?= $color ?> text-left ">Signup</div>
+					<hr />
+				</div>
+
+				<div class="col-12 col-md-4">
+					<q-input v-model="login.firstName" label="Your name *" outlined size="lg">
+					</q-input>
+				</div>
+				<div class="col-12 col-md-4">
+					<q-input v-model="login.email" label="Email *" outlined size="lg">
+					</q-input>
+				</div>
+				<div class="col-12">
+					<div class="my-3">
+						<q-toggle v-model="login.screen" label="By email" color="<?= $color ?>" true-value="signin" false-value="signup" keep-color></q-toggle>
+					</div>
+				</div>
+				<div class="col-6 col-md-6">
+				</div>
+				<div class="col-12 col-md-12 my-1">
+					<q-btn label="<?= $params->get("btn-ok-label", "Записаться") ?>" @click="<?= $params->get("btn-ok-action", "onBtnSignUpClick(onSubscribe)") ?>" size="lg" color="<?= $params->get("btn-ok-color", $color) ?>"></q-btn>
+				</div>
+			</div>
+
+			<div class="row q-col-gutter-sm" v-if="login.screen=='signin'">
+
+				<div class="col-12">
+					<div class="title5 my-3">Enter your email</div>
+				</div>
+				<div class="col-12 col-md-6">
+					<q-input v-model="login.email" label="My email" outlined size="lg">
+					</q-input>
+				</div>
+				<div class="col-12">
+					<div class="my-3">
+						<q-toggle v-model="login.screen" label="By email" color="<?= $color ?>" true-value="signin" false-value="signup" keep-color></q-toggle>
+					</div>
+				</div>
+
+				<div class="col-12 col-md-12">
+					<q-btn label="Send auth link" @click="notifyEmail(login.email)" color="<?= $color ?>" size="lg"></q-btn>
+				</div>
+
+			</div>
+
+			<div class="row" v-if="login.screen=='signin_confirm'">
+				<div class="col-12 col-md-6">
+					<q-input v-model="login.email" label="Email" outlined size="lg" id="el_login.email">
+					</q-input>
+				</div>
+				<div class="col-12 col-md-6">
+				</div>
+				<div class="col-12 col-md-6">
+					<q-input v-model="login.confirmCode" label="Email" outlined size="lg" id="el_login.confirmCode">
+					</q-input>
+Enter your code, sended by email				</div>
+				<div class="col-6 col-md-6">
+				</div>
+
+				<div class="col-6 col-md-6 my-1 text-right">
+					<q-btn label="Signin" @click="" size="lg" color="deep-orange"></q-btn>
+				</div>
+			</div>
+
+		</div>
+
+
+
+	</div>
+</div>
