@@ -8,7 +8,7 @@ use Expertix\Core\Util\UUID;
 use Project\Bot\BotLongevity2;
 use Project\Bot\BotLongevityChild;
 
-$isTest = true;
+$isTest = false;
 Log::setSilent(!$isTest);
 $configArr = include (__DIR__."/config/bot2.cfg.php");
 $config = new BotConfig($configArr, "ru");
