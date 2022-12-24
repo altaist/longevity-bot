@@ -30,6 +30,10 @@ class ArrayWrapper{
 		$this->dataArr = $arr;
 	}
 
+	public function getArraySize():int{
+		return count($this->getArray() ?$this->getArray(): []);
+	}
+
 	function check($paramName)
 	{
 		return !empty($this->get($paramName));

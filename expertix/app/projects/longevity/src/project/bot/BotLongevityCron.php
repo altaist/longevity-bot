@@ -2,7 +2,7 @@
 namespace Project\Bot;
 
 use Expertix\Bot\BotAbstract;
-
+use Expertix\Bot\ChatInstance;
 use Expertix\Bot\Log\BotLog;
 use Expertix\Bot\Model\ChatActionModel;
 use Expertix\Bot\Telegram\TelegramResponse;
@@ -15,7 +15,7 @@ class BotLongevityCron extends BotLongevityBase
 	protected function sendChatCreationResult($chatInstance)
 	{
 	}
-	public function startMultiSending($contentGroup)
+	public function startMultiSending($contentGroupKey)
 	{
 		$model = $this->getChatModel();
 		$chatList = $model->getChatsForUpdate();
@@ -26,61 +26,125 @@ class BotLongevityCron extends BotLongevityBase
 		}
 		$response = TelegramResponse::createEmptyResponse();
 		
-		$contentConfigLang = $this->getConfig()->getContentConfigForGroupLang($contentGroup);
-		$contentConfig = $this->getConfig()->getContentConfigForGroup($contentGroup);
+		//$contentConfigLang = $this->getConfig()->getContentConfigForGroupLang($contentGroupKey);
 		//$images = $this->getConfig()->getImgResources();
-		
+		$model = $this->getChatModel();
+		Log::d("<pre>");
 		foreach ($chatList as $chatData) {
-			Log::d("Sending content to chat:", $chatData);
-			$chatId = $chatData["chatId"];
+			Log::d("Sending content to chat:<pre>", $chatData);
+			$chat = new ChatInstance($chatData);
+			$chatId = $chat->getChatId();
+			$lang = $chat->get("lang", $this->getConfig()->getLang());
+			$experiment = 0;
+			$chatContentConfig = $this->getChatContentConfigForGroup($chat, $contentGroupKey);
+			Log::d("Chat config: ", $chatContentConfig->getArray());
+
+			$dialogContent = $this->getDialogContent($experiment, $contentGroupKey, $lang);
+			
+			$contentIndex = $chatContentConfig->getWrapped($contentGroupKey)->get("index");
+			$maxContentIndex = $dialogContent->getWrapped("items")->getArraySize();
+			if (++$contentIndex > $maxContentIndex) {
+				$contentIndex = 0;
+			}
+			Log::d("ContentIndex: $contentIndex. MaxContentIndex: $maxContentIndex");
+			$chatContentConfigArr = $chatContentConfig->getArray();
+			$chatContentConfigArr[$contentGroupKey]["index"] = $contentIndex;
+			
+			$dialogItem = $dialogContent->getWrapped("items")->getWrapped($contentIndex);
+			//Log::d("Dialog data: ", $dialogItem->getArray());
+			$text = $dialogItem->get("test", "");
+			$img = $dialogItem->get("img", null);
+			$tags = $dialogItem->get("tags", "");
+			
 			$response->setChatId($chatId);
-			
-			
-			$contentIndex = $chatData["lastContentIndex"];
-
-			$tags = "";
-			$text = $contentConfigLang->get("text", "");
+			$response->setMethod("sendMessage");
 			$response->setText($text);
-			if($contentGroup==10){
-				$images = $contentConfig->get("img", []);
-
-				$maxContentIndex = count($images) - 1;
-				$maxContentIndex = $maxContentIndex < 0 ? 0 : $maxContentIndex;
-				if (++$contentIndex > $maxContentIndex) {
-					$contentIndex = 0;
-				}
-				
+			
+			if($img){
 				$response->setMethod("sendPhoto");
 				$response->set("caption", $text);
-				$response->setPhoto($images[$contentIndex][0]);
-				if(isset($images[$contentIndex][1])){
-					$tags = $images[$contentIndex][1];
-				}
-			}else{
-				$response->setMethod("sendMessage");
-				$response->setText($text);
+				$response->setPhoto($img);
 			}
+			
 			// KB
-			$response->set("reply_markup", $contentConfigLang->get("kb"));
-
+			$response->set("reply_markup", $dialogItem->get("kb"));
 			BotLog::log("startMultisending: " . json_encode($response->getArray()));
-
-			$this->sendPreparedResponse($chatId, $contentGroup, $contentIndex, $tags, $response);
-
-			//			$nextContentId = $contentIndex<$maxContentIndex?$contentIndex+1:0;
+			
+			$sendResult = $this->getTransport()->sendResponse($response);
+			if ($sendResult && isset($sendResult["ok"]) && isset($sendResult["result"])) {
+				$result = $sendResult["result"];
+				$messageId = $result["message_id"];
+				
+				$model->saveSendedMessage($chatId, $messageId, $contentGroupKey, $chatContentConfig, $tags, $response->getText(), $response->getPhoto());
+			}
+			
+			Log::d("Before saving:",  $chatContentConfigArr);
+			Log::d("Content index: $contentIndex");
+			$model->saveSendedMessage($chatId, 1, $contentGroupKey, $chatContentConfigArr, $tags, $response->getText(), $response->getPhoto());
+			
+			//			$this->sendPreparedResponse($chatId, $contentGroupKey, $contentIndex, $tags, $response);
+			
 		}
 
 		return count($chatList);
 	}
+
+	protected function getChatContentConfigForGroup(ChatInstance $chat, $groupKey, $experiment = 0)
+	{
+		$config = $this->_getChatContentConfigForGroup($chat, $groupKey, $experiment);
+		if(!$config){
+			$config = $this->createChatContentConfig($experiment);
+		}
+		return $config;
+	}
+	protected function _getChatContentConfigForGroup(ChatInstance $chat, $groupKey, $experiment=0){
+		$configStr = $chat->get("contentConfig");
+		if(!$configStr){
+			return null;
+		}
+		$configArr = null;
+		$configArr = json_decode($configStr);
+		if(!is_array($configArr)){
+			//return null;
+		}
+
+		//$contentConfig = isset($configArr[$groupKey])?$configArr[$groupKey]:[];
+		return new ArrayWrapper($configArr);
+	}
+
+	function createChatContentConfig($experiment){
+		$dialogs = $this->getAllDialogsContent($experiment);
+		$dialogsArr = $dialogs->getArray();
+		$dialogConfig = [];
+		foreach ($dialogsArr as $key => $dialog) {
+			$dialogConfig[$key] = $this->createChatContentConfigForGroup();
+		}
+
+		return new ArrayWrapper($dialogConfig);
+	}
+	function createChatContentConfigForGroup()
+	{
+		return [
+			"index" => 0
+		];
+	}
+
+	function getAllDialogsContent($experiment): ArrayWrapper{
+		return $this->getConfig()->getContentConfig()->getWrapped($experiment, []);
+	}
+	function getDialogContent($experiment, $dialogKey, $lang): ArrayWrapper{
+		//Log::d("Content config for $dialogKey: ", $this->getAllDialogsContent($experiment)->getWrapped($dialogKey, []));
+		return $this->getAllDialogsContent($experiment)->getWrapped($dialogKey, [])->getWrapped($lang, null);
+	}
 	
 
-	protected function prepareResponse_(&$response, $chatId, $contentGroup, $contentConfigLang)
+	protected function prepareResponse_(&$response, $chatId, $contentGroupKey, $contentConfigLang)
 	{
-		if ($contentGroup == 1) {
+		if ($contentGroupKey == 1) {
 			$response->setMethod("sendMessage");
 			$response->setText("Доброе утро!");
 			//$response->set("reply_markup", $this->getConfig()->getText("kb_content_answer"));
-		} elseif ($contentGroup == 2) {
+		} elseif ($contentGroupKey == 2) {
 			$response->setMethod("sendMessage");
 			$response->setText("Спокойной ночи!");
 			//$response->set("reply_markup", $this->getConfig()->getText("kb_content_answer"));
@@ -89,7 +153,7 @@ class BotLongevityCron extends BotLongevityBase
 	}
 
 
-	protected function sendPreparedResponse($chatId, $contentGroup, $contentIndex, $tags, $response)
+	protected function sendPreparedResponse($chatId, $contentGroupKey, $contentIndex, $tags, $response)
 	{
 		$model = $this->getChatModel();
 
@@ -98,7 +162,7 @@ class BotLongevityCron extends BotLongevityBase
 			$result = $sendResult["result"];
 			$messageId = $result["message_id"];
 
-			$model->saveSendedMessage($chatId, $messageId, $contentGroup, $contentIndex, $tags, $response->getText(), $response->getPhoto());
+			$model->saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentIndex, $tags, $response->getText(), $response->getPhoto());
 		}
 	}
 

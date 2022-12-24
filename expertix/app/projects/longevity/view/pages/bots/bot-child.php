@@ -8,7 +8,7 @@ use Expertix\Core\Util\UUID;
 use Project\Bot\BotLongevity2;
 use Project\Bot\BotLongevityChild;
 
-$isTest = false;
+$isTest = true;
 Log::setSilent(!$isTest);
 $configArr = include (__DIR__."/config/bot2.cfg.php");
 $config = new BotConfig($configArr, "ru");
@@ -19,8 +19,8 @@ if($isTest){
 	$transport = new TelegramTransportTest($config);
 	$bot = new BotLongevityChild($config, $transport);
 	
-	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "not123"]]);
-	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "password"]]);
+	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "start"]]);
+	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "LDG2"]]);
 	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "1_1"]]);
 	exit;
 

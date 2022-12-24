@@ -38,6 +38,5 @@ if ($isTest) {
 
 	Log::d("Sending...");
 	$bot->startMultiSending($contentGroup);
-	Log::d("Checking...");
-	//$bot->startCheckingAlarm();
+
 }

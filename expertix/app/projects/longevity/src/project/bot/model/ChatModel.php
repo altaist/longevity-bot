@@ -158,15 +158,19 @@ class ChatModel extends BaseBotModel
 
 		return DB::getRow("select * from bot_chat_message where chatId=? and messageId=?", [$chatId, $messageId]);
 	}
-	public function saveSendedMessage($chatId, $messageId, $contentGroup, $contentIndex, $tags, $messageText, $messageImg)
+	public function saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentConfig, $tags, $messageText, $messageImg)
 	{
-		$sql = "update bot_chat set state=2, lastContentIndex=$contentIndex, dateLastPush=NOW(), dateLastAnswer=(if (state=1, NOW(), dateLastAnswer)), isNeedUpdate=0 where chatId=?";
-		$params = [$chatId];
+		$contentConfigStr = json_encode($contentConfig);
+		$sql = "update bot_chat set state=2, contentConfig=?, dateLastPush=NOW(), dateLastAnswer=(if (state=1, NOW(), dateLastAnswer)), isNeedUpdate=0 where chatId=?";
+		$params = [$contentConfigStr, $chatId];
 		DB::set($sql, $params);
 
 		$sql = "insert into bot_chat_message (chatId, messageId, contentGroup, contentIndex, tags, messageText, messageImg) values(?,?,?,?,?,?,?)";
-		$params = [$chatId, $messageId, $contentGroup, $contentIndex, $tags, $messageText, $messageImg];
+		$params = [$chatId, $messageId, $contentGroupKey, 0, $tags, $messageText, $messageImg];
 		BotLog::log($params);
+
+		Log::d("Saved for $chatId: ", $contentConfigStr);
+
 		return DB::add($sql, $params);
 	}
 
