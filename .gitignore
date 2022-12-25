@@ -6,3 +6,6 @@ web/js/
 expertix/uploads
 expertix/runtime
 expertix/app/projects/longevity/config/system.cfg.php
+uploads/
+upload/
+backup/

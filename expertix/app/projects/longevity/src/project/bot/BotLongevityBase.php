@@ -278,6 +278,14 @@ abstract class BotLongevityBase extends BotManager
 		$this->sendText($resultText);
 	}
 
+	public function getAllDialogsContent($experiment): ArrayWrapper{
+		return $this->getConfig()->getContentConfig()->getWrapped($experiment, []);
+	}
+	public function getDialogContent($experiment, $dialogKey, $lang): ArrayWrapper{
+		//Log::d("Content config for $dialogKey: ", $this->getAllDialogsContent($experiment)->getWrapped($dialogKey, []));
+		return $this->getAllDialogsContent($experiment)->getWrapped($dialogKey, [])->getWrapped($lang, null);
+	}
+
 	protected function getChatModel()
 	{
 		return $this->createChatModel();
