@@ -55,6 +55,9 @@ class BotLongevityParent extends BotLongevityBase
 		$chatInstance = $this->getChatInstance();
 		$model = $this->getChatModel();
 		$chatId = $chatInstance->getChatId();
+		//$lang = $chatInstance->getLang($this->getConfig()->getLang());
+		$lang = $this->getConfig()->getLang();
+		$experiment = 0;
 		$messageId = $context->getTransport()->getRequest()->getMessageId();
 		
 		$replacedText = "Thank you!";
@@ -65,8 +68,12 @@ class BotLongevityParent extends BotLongevityBase
 			$contentGroup = $messageDb["contentGroup"];
 		}
 		
-		$contentConfigLang = $this->getConfig()->getContentConfigForGroupLang($contentGroup);
-		$replacedText = $contentConfigLang->get("text_after_like");
+		//$contentConfigLang = $this->getConfig()->getContentConfigForGroupLang($contentGroup);
+		$contentConfigLang = $this->getDialogContent($experiment, $contentGroup, $lang);
+		$contentConfigDefaults = $contentConfigLang->getWrapped("default"); 
+		$currentDialog = $contentConfigLang->getWrapped("default"); 
+
+		$replacedText = $contentConfigDefaults->get("text_after_like");
 
 		// Send callback result
 		$this->getTransport()->sendCallbackResult("");

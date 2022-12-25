@@ -5,7 +5,7 @@ return [[
         "type" => "1",
         "ru" => [
             "items" => [
-                ["text" => "Доброе утро! Как самочувствие?"],
+                ["text" => "Доброе утро! Как самочувствие?", "action"=>"Плохое, Хорошее", [["Плохое"=>"dislike"],["Хорошее"=>"like"]]],
                 ["text" => "Вы проснулись? Как спалось?"],
                 ["text" => "Привет! Хорошего дня!"]
             ],
@@ -16,8 +16,8 @@ return [[
                 "kb" => [
                     'inline_keyboard' => [
                         [
-                            ['text' => 'Хорошее', "callback_data" => "like"],
-                            ['text' => 'Плохое', "callback_data" => "dislike"],
+                            ['text' => 'Все хорошо', "callback_data" => "like"],
+                            ['text' => 'Все неважно', "callback_data" => "dislike"],
                         ]
                     ]
                 ]

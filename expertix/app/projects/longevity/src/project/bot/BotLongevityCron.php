@@ -45,7 +45,7 @@ class BotLongevityCron extends BotLongevityBase
 			$dialogDefaults = $dialogContent->getWrapped("default");
 			
 			// Saved context
-			$chatContentContextArr = $this->getChatContentContext($chat, $contentGroupKey, $experiment);
+			$chatContentContextArr = $chat->getDialogContextForGroup($contentGroupKey, $experiment); //$this->getChatContentContext($chat, $contentGroupKey, $experiment);
 			//Log::d("Chat config: ", $chatContentContextArr);
 			$contentIndex = $chatContentContextArr[$experiment][$contentGroupKey]["index"];
 			$maxContentSize = $dialogContent->getWrapped("items")->getArraySize();
@@ -104,34 +104,7 @@ class BotLongevityCron extends BotLongevityBase
 		return count($chatList);
 	}
 
-	protected function getChatContentContext(ChatInstance $chat, $groupKey, $experiment = 0):array
-	{
-		$configArr = $this->getSavedChatConfig($chat);
-		if(!$configArr){
-			$configArr = [[$groupKey => ["index" => 0]]];//$this->createChatContentConfig($experiment);
-		}
-		
-		if(!isset($configArr[$experiment][$groupKey])){
-			$configArr[$experiment][$groupKey] = ["index" => 0];
-		}
-		
-		return $configArr;
-	}
-	protected function getSavedChatConfig(ChatInstance $chat):?array{
-		$configStr = $chat->get("contentConfig");
-		//Log::d("!!!", $configStr);
-		if(!$configStr){
-			return null;
-		}
-		$configArr = null;
-		$configArr = json_decode($configStr, true);
-		if(!is_array($configArr)){
-			return null;
-		}
 
-		//return new ArrayWrapper($configArr);
-		return $configArr;
-	}
 
 	function createChatContentConfig($experiment){
 		$dialogs = $this->getAllDialogsContent($experiment);
