@@ -52,6 +52,24 @@ class BotLongevityParent extends BotLongevityBase
 	{
 		$this->processAnswer($context, 2, 0);
 	}
+	protected function commandAction0($context)
+	{
+		$this->processAnswer($context, 0, 0);
+	}
+
+	protected function commandAction1($context)
+	{
+		$this->processAnswer($context, 1, 1);
+	}
+	protected function commandAction2($context)
+	{
+		$this->processAnswer($context, 2, 2);
+	}
+
+	protected function commandAction3($context)
+	{
+		$this->processAnswer($context, 3, 3);
+	}
 
 	private function processAnswer($context, $actionIndex, $rating)
 	{
@@ -94,7 +112,7 @@ class BotLongevityParent extends BotLongevityBase
 		$response = TelegramResponse::createTextResponse($chatId, $replacedText);
 		//$response->set("reply_markup", $context->getConfig()->getText("kb_content_answer_edited"));
 		$response->set("message_id", $messageId);
-
+/*
 		if ($contentGroup == 10) {
 			$response->setMethod("editMessageCaption");
 			$response->set("caption", $replacedText);
@@ -102,11 +120,14 @@ class BotLongevityParent extends BotLongevityBase
 			$response->setMethod("editMessageText");
 			$response->set("text", $replacedText);
 		}
-
+*/		
 		BotLog::log("processAnswer: " . json_encode($response->getArray()));
+		//$this->getTransport()->sendResponse($response);
+		
+		$response->setMethod("editMessageReplyMarkup");
 		$this->getTransport()->sendResponse($response);
 
-		//$this->sendText($answerText);
+		$this->sendText($replacedText);
 	}
 
 	function getActionAnswer($dialog, $dialogDefault, $actionIndex)

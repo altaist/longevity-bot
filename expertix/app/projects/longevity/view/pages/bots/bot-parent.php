@@ -19,6 +19,9 @@ if($isTest){
 	$transport = new TelegramTransportTest($config);
 	$bot = new BotLongevityParent($config, $transport);
 
+	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "2", "username" => "testuser1"], "text" => "like"]]);
+	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "2", "username" => "testuser1"], "text" => "dislike"]]);
+	
 	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "start"]]);
 	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "password"]]);
 	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "2", "username" => "testuser1"], "text" => "start"]]);

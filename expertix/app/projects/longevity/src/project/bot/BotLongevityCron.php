@@ -132,14 +132,14 @@ class BotLongevityCron extends BotLongevityBase
 		if ($dialog->get("kb")) {
 			return $dialog->get("kb");
 		}
-		if (!$dialog->get("action")) {
+		if (!$dialog->get("actions")) {
 			return $dialogDefault->get("kb");
 		}
 
 		$kb = $dialogDefault->get("kb", null);
 		$buttons = null;
 
-		$actionSrc = $dialog->get("action");
+		$actionSrc = $dialog->get("actions");
 		if (is_array($actionSrc)) {
 			$arr = $actionSrc;
 			$buttons = $this->parseActionsFromArr($arr);
