@@ -18,6 +18,12 @@ return [
 		"question" => ["method" => "commandQuestion"],
 		"like" => ["method" => "commandLike"],
 		"dislike" => ["method" => "commandDislike"],
+		"dontknow" => ["method" => "commandDontKnow"],
+		"action_0" => ["method" => "commandAction0"],
+		"action_1" => ["method" => "commandAction1"],
+		"action_2" => ["method" => "commandAction2"],
+		"action_3" => ["method" => "commandAction3"],
+		"action_4" => ["method" => "commandAction4"],
 		"stat" => ["method" => "commandStat"],
 		
 		"set" => ["method" => "commandSettings"],

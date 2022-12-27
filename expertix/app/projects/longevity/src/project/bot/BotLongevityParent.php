@@ -1,4 +1,5 @@
 <?php
+
 namespace Project\Bot;
 
 use Expertix\Bot\BotAbstract;
@@ -27,7 +28,6 @@ class BotLongevityParent extends BotLongevityBase
 		}
 		$linkKey = $chatInstance->getLinkKey();
 		return $context->getConfig()->getText("chat_link_created") . "" . $linkKey;
-
 	}
 	protected function commandQuestion($context)
 	{
@@ -41,17 +41,21 @@ class BotLongevityParent extends BotLongevityBase
 	}
 	protected function commandLike($context)
 	{
-
-		$answerText = "Спасибо за ответ!";
-		$this->processAnswer($context, 1);
+		$this->processAnswer($context, 0, 1);
 	}
 	protected function commandDislike($context)
 	{
-		$answerText = "Спасибо за ответ! Мы постараемся реже присылать вам такие сообщения";
-		$this->processAnswer($context, -1);
+		$this->processAnswer($context, 1, -1);
 	}
-	
-	private function processAnswer($context, $rating){
+
+	protected function commandDontKnow($context)
+	{
+		$this->processAnswer($context, 2, 0);
+	}
+
+	private function processAnswer($context, $actionIndex, $rating)
+	{
+		Log::d("<pre>");
 		$chatInstance = $this->getChatInstance();
 		$model = $this->getChatModel();
 		$chatId = $chatInstance->getChatId();
@@ -59,42 +63,76 @@ class BotLongevityParent extends BotLongevityBase
 		$lang = $this->getConfig()->getLang();
 		$experiment = 0;
 		$messageId = $context->getTransport()->getRequest()->getMessageId();
-		
+
 		$replacedText = "Thank you!";
 		$contentGroup = 1;
-		
+
 		$messageDb = $model->onAnswerRecieved($chatId, $messageId, $rating, $context->getCommand()->getRequestTextOrigin());
-		if($messageDb){
-			$contentGroup = $messageDb["contentGroup"];
-		}
-		
-		//$contentConfigLang = $this->getConfig()->getContentConfigForGroupLang($contentGroup);
-		$contentConfigLang = $this->getDialogContent($experiment, $contentGroup, $lang);
-		$contentConfigDefaults = $contentConfigLang->getWrapped("default"); 
-		$currentDialog = $contentConfigLang->getWrapped("default"); 
-
-		$replacedText = $contentConfigDefaults->get("text_after_like");
-
 		// Send callback result
 		$this->getTransport()->sendCallbackResult("");
+
+		if (!$messageDb) {
+			return;
+		}
+		$contentGroup = $messageDb["contentGroup"];
+		$dialogIndex = $messageDb["contentIndex"];
+		//$contentGroup = 1;
+		//$dialogIndex = 2;
+
+		//$contentConfigLang = $this->getConfig()->getContentConfigForGroupLang($contentGroup);
+		$contentConfigLang = $this->getDialogContent($experiment, $contentGroup, $lang);
+		//Log::d($contentConfigLang->getArray());
+		
+		$currentDialog = $contentConfigLang->getWrapped("items")->getWrapped($dialogIndex);
+		Log::d($currentDialog->getArray());
+		$currentDialogDefault = $contentConfigLang->getWrapped("default");
+
+		$replacedText = $this->getActionAnswer($currentDialog, $currentDialogDefault, $actionIndex);
+		Log::d($replacedText);
 
 		// Send customised answer 
 		$response = TelegramResponse::createTextResponse($chatId, $replacedText);
 		//$response->set("reply_markup", $context->getConfig()->getText("kb_content_answer_edited"));
 		$response->set("message_id", $messageId);
-		
-		if($contentGroup==10){
+
+		if ($contentGroup == 10) {
 			$response->setMethod("editMessageCaption");
-			$response->set("caption", $replacedText);			
-		}else{
+			$response->set("caption", $replacedText);
+		} else {
 			$response->setMethod("editMessageText");
-			$response->set("text", $replacedText);						
+			$response->set("text", $replacedText);
 		}
-		
+
 		BotLog::log("processAnswer: " . json_encode($response->getArray()));
 		$this->getTransport()->sendResponse($response);
-		
+
 		//$this->sendText($answerText);
+	}
+
+	function getActionAnswer($dialog, $dialogDefault, $actionIndex)
+	{
+		$v = $actionIndex + 1;
+		//Log::d($dialog);
+		$text = $dialogDefault->get("text_after_$v", $dialogDefault->get("text_after_answer", "!!!"));
+
+		if ($dialog->get("answers")) {
+			$answersSrc = $dialog->get("answers");
+			$answersArr = $answersSrc;
+			if (is_string($answersSrc)) {
+				$answersArr = explode(";", $answersSrc);
+			}
+
+			if (!is_array($answersArr) || count($answersArr) <= 1) {
+				$text = $answersSrc;
+			} else {
+
+				if ($actionIndex >= 0 && $actionIndex < count($answersArr)) {
+					$text = $answersArr[$actionIndex];
+				}
+			}
+		}
+
+		return $text;
 	}
 
 	protected function createLink($context)
@@ -114,6 +152,4 @@ class BotLongevityParent extends BotLongevityBase
 		$resultText = $this->processStat($context, false, "\n");
 		$this->sendText($resultText);
 	}
-
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Project\Bot;
 
 use Expertix\Bot\BotAbstract;
@@ -25,7 +26,7 @@ class BotLongevityCron extends BotLongevityBase
 			//throw new \Exception("Error multisending. Wrong chats list", 1);			
 		}
 		$response = TelegramResponse::createEmptyResponse();
-		
+
 		//$contentConfigLang = $this->getConfig()->getContentConfigForGroupLang($contentGroupKey);
 		//$images = $this->getConfig()->getImgResources();
 		$model = $this->getChatModel();
@@ -36,14 +37,14 @@ class BotLongevityCron extends BotLongevityBase
 			Log::d("Sending content to chat '$chatId':");
 			$lang = $chat->get("lang", $this->getConfig()->getLang());
 			$experiment = 0;
-			
+
 			// Load resources
 			$dialogContent = $this->getDialogContent($experiment, $contentGroupKey, $lang);
-			if(!$dialogContent){
+			if (!$dialogContent) {
 				continue;
 			}
 			$dialogDefaults = $dialogContent->getWrapped("default");
-			
+
 			// Saved context
 			$chatContentContextArr = $chat->getDialogContextForGroup($contentGroupKey, $experiment); //$this->getChatContentContext($chat, $contentGroupKey, $experiment);
 			//Log::d("Chat config: ", $chatContentContextArr);
@@ -54,7 +55,7 @@ class BotLongevityCron extends BotLongevityBase
 			}
 			Log::d("ContentIndex: $contentIndex. MaxContent: $maxContentSize");
 			$chatContentContextArr[$experiment][$contentGroupKey]["index"] = $contentIndex;
-			
+
 			$dialogItem = $dialogContent->getWrapped("items")->getWrapped($contentIndex);
 
 			// Prepare content for sending
@@ -64,40 +65,41 @@ class BotLongevityCron extends BotLongevityBase
 			$tags = $dialogItem->get("tags", $dialogDefaults->get("tags", ""));
 
 			$needSend = false;
-			if($img){
+			if ($img) {
 				$response->setMethod("sendPhoto");
 				$response->set("caption", $text);
 				$response->setPhoto($img);
 				$needSend = true;
-			}elseif($text){
+			} elseif ($text) {
 				$response->setChatId($chatId);
 				$response->setMethod("sendMessage");
-				$response->setText($text);				
+				$response->setText($text);
 				$needSend = true;
 			}
 
-			if(!$needSend){
+			if (!$needSend) {
 				continue;
 			}
 
 			// KB
-			$kb = $dialogItem->get("kb", $dialogDefaults->get("kb", null));
+//			$kb = $dialogItem->get("kb", $dialogDefaults->get("kb", null));
+			$kb = $this->createKb($dialogItem, $dialogDefaults, $chat);
 			$response->set("reply_markup", $kb);
 			Log::d("Content to send: text='$text'   img='$img' ", $kb);
-			
+
 			BotLog::log("Autsend: " . json_encode($response->getArray()));
 			$sendResult = $this->getTransport()->sendResponse($response);
 			if ($sendResult && isset($sendResult["ok"]) && isset($sendResult["result"])) {
 				$result = $sendResult["result"];
 				$messageId = $result["message_id"];
-				
+
 				$model->saveSendedMessage($chatId, $messageId, $contentGroupKey, $chatContentContextArr, $tags, $response->getText(), $response->getPhoto());
 			}
-			
+
 			Log::d("Before saving:",  $chatContentContextArr);
 			Log::d("Content index: $contentIndex");
 			$model->saveSendedMessage($chatId, 1, $contentGroupKey, $chatContentContextArr, $tags, $response->getText(), $response->getPhoto());
-			
+
 			//			$this->sendPreparedResponse($chatId, $contentGroupKey, $contentIndex, $tags, $response);
 		}
 
@@ -106,7 +108,8 @@ class BotLongevityCron extends BotLongevityBase
 
 
 
-	function createChatContentConfig($experiment){
+	function createChatContentConfig($experiment)
+	{
 		$dialogs = $this->getAllDialogsContent($experiment);
 		$dialogsArr = $dialogs->getArray();
 		$dialogConfig = [];
@@ -123,8 +126,67 @@ class BotLongevityCron extends BotLongevityBase
 		];
 	}
 
+	function createKb($dialog, $dialogDefault, $chat)
+	{
 
-	
+		if ($dialog->get("kb")) {
+			return $dialog->get("kb");
+		}
+		if (!$dialog->get("action")) {
+			return $dialogDefault->get("kb");
+		}
+
+		$kb = $dialogDefault->get("kb", null);
+		$buttons = null;
+
+		$actionSrc = $dialog->get("action");
+		if (is_array($actionSrc)) {
+			$arr = $actionSrc;
+			$buttons = $this->parseActionsFromArr($arr);
+		} elseif (is_string($actionSrc)) {
+			$arr = explode(";", $actionSrc);
+			if (is_array($arr)) {
+				$buttons = $this->parseActionsFromArr($arr);
+			}
+		}
+		if (!$buttons) {
+			return null;
+		}
+
+		$kb = [];
+		$kb['inline_keyboard'] = [$buttons];
+		return $kb;
+	}
+
+	function parseActionsFromArr($actionsArr, $type = "like")
+	{
+		if (!is_array($actionsArr)) {
+			return null;
+		}
+		$buttons = [];
+		$count = count($actionsArr);
+		$commands = ["like", "dislike"];
+		if ($count > 2) {
+			$commands = [];
+			for ($i = 0; $i < $count; $i++) {
+				$commands[] = "action_$i";
+			}
+		}
+
+		for ($i = 0; $i < $count; $i++) {
+			$item = $actionsArr[$i];
+			if (is_string($item)) {
+				$buttons[] = ["text" => $item, "callback_data" => $commands[$i]];
+			} elseif (is_array($item) && count($item) > 1) {
+				$buttons[] = ["text" => $item[0], "callback_data" => $item[1]];
+			}
+		}
+
+		return $buttons;
+	}
+
+
+
 
 	protected function prepareResponse_(&$response, $chatId, $contentGroupKey, $contentConfigLang)
 	{
