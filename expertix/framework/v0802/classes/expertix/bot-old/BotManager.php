@@ -31,7 +31,7 @@ class BotManager implements IBotContext
 	{
 		$this->loadCommandsFromConfig();
 	}
-	protected function onBeforeRun($context)
+	protected function onBeforeRun(BotCommand $command)
 	{
 		return true;
 	}
@@ -122,7 +122,7 @@ class BotManager implements IBotContext
 			$func = $command->getMethod();
 			//Log::d("<br><br>Func: $func");
 
-			if(!$this->onBeforeRun($context)){
+			if(!$this->onBeforeRun($command)){
 				return;
 			}
 

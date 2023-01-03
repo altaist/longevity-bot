@@ -152,7 +152,7 @@ abstract class BotLongevityBase extends BotManager
 		}
 		//Log::d("CHAT_LINK: chatID='$chatId' Requested chat link: '$chatLink'");
 
-		$this->connectToAnotherChat($context, $chatId, $chatLink);
+		//$this->connectToAnotherChat($context, $chatId, $chatLink);
 
 	}
 	protected function processStat($context, $isForChild, $br)

@@ -93,12 +93,11 @@ class BotLongevityCron extends BotLongevityBase
 				$result = $sendResult["result"];
 				$messageId = $result["message_id"];
 
-				$model->saveSendedMessage($chatId, $messageId, $contentGroupKey, $chatContentContextArr, $tags, $response->getText(), $response->getPhoto());
+				$model->saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentIndex, $chatContentContextArr, $tags, $response->getText(), $response->getPhoto());
 			}
 
 			Log::d("Before saving:",  $chatContentContextArr);
 			Log::d("Content index: $contentIndex");
-			$model->saveSendedMessage($chatId, 1, $contentGroupKey, $chatContentContextArr, $tags, $response->getText(), $response->getPhoto());
 
 			//			$this->sendPreparedResponse($chatId, $contentGroupKey, $contentIndex, $tags, $response);
 		}

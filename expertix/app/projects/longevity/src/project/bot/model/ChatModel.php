@@ -150,15 +150,28 @@ class ChatModel extends BaseBotModel
 		return DB::set($sql, $params);
 	}
 
-	public function onAnswerRecieved($chatId, $messageId, $rating, $answerMessage)
+	public function getLastMessageId($chatId){
+		$sql = "select max(messageId) from bot_chat_message where chatId=? order by created desc";
+		return DB::getValue($sql, [$chatId]);
+	}
+
+	public function onCallbackAnswerRecieved($chatId, $messageId, $answerIndex, $rating, $answerMessage)
 	{
-		$sql = "update bot_chat_message set rating=?, answerText=?, dateLastAnswer=NOW() where chatId=? and messageId=?";
-		$params = [$rating, $answerMessage, $chatId, $messageId];
+		$sql = "update bot_chat_message set rating=?, answerText=case when answerText is not null then concat(answerText, '\n',  ?) else ? end, dateLastAnswer=NOW() where chatId=? and messageId=?";
+		$params = [$rating, $answerMessage, $answerMessage, $chatId, $messageId];
 		DB::set($sql, $params);
 
 		return DB::getRow("select * from bot_chat_message where chatId=? and messageId=?", [$chatId, $messageId]);
 	}
-	public function saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentConfig, $tags, $messageText, $messageImg)
+	public function onTextAnswerRecieved($chatId, $messageId, $answerMessage)
+	{
+		$sql = "update bot_chat_message set answerText=case when answerText is not null then concat(answerText, '\n',  ?) else ? end, dateLastAnswer=NOW() where chatId=? and messageId=?";
+		$params = [$answerMessage, $answerMessage, $chatId, $messageId];
+		DB::set($sql, $params);
+
+		return DB::getRow("select * from bot_chat_message where chatId=? and messageId=?", [$chatId, $messageId]);
+	}
+	public function saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentIndex, $contentConfig, $tags, $messageText, $messageImg)
 	{
 		$contentConfigStr = json_encode($contentConfig);
 		$sql = "update bot_chat set state=2, contentConfig=?, dateLastPush=NOW(), dateLastAnswer=(if (state=1, NOW(), dateLastAnswer)), isNeedUpdate=0 where chatId=?";
@@ -166,7 +179,7 @@ class ChatModel extends BaseBotModel
 		DB::set($sql, $params);
 
 		$sql = "insert into bot_chat_message (chatId, messageId, contentGroup, contentIndex, tags, messageText, messageImg) values(?,?,?,?,?,?,?)";
-		$params = [$chatId, $messageId, $contentGroupKey, 0, $tags, $messageText, $messageImg];
+		$params = [$chatId, $messageId, $contentGroupKey, $contentIndex, $tags, $messageText, $messageImg];
 		BotLog::log($params);
 
 		Log::d("Saved for $chatId: ", $contentConfigStr);

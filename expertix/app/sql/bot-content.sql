@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `bot_chat_message` (
 	`tags` varchar(1024) null,
 	`messageText` varchar(1024) null,
 	`messageImg` varchar(1024) null,
-  `answerText` varchar(256) null,
+  `answerText` varchar(2048) null,
   `rating` tinyint(2) DEFAULT 0,
   `dateLastAnswer` datetime DEFAULT NULL,
   `created` datetime DEFAULT current_timestamp(),

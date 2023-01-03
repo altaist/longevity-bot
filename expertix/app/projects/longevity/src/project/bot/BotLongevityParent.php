@@ -39,6 +39,25 @@ class BotLongevityParent extends BotLongevityBase
 		BotLog::log(json_encode($context->getConfig()->getText("kb_content_answer")));
 		$this->getTransport()->sendResponse($questionResponse);
 	}
+
+	protected function defaultCommand($context)
+	{
+		$chatInstance = $this->getChatInstance();
+		$model = $this->getChatModel();
+		$chatId = $chatInstance->getChatId();
+		$messageId = $model->getLastMessageId($chatId);
+		//		$this->sendText($messageId);
+		//		$this->sendText($context->getCommand()->getRequestTextOrigin());
+
+		if (!$messageId) {
+			parent::defaultCommand($context);
+			return;
+		}
+
+		$this->processAnswer($context, 0, 0, false);
+	}
+
+
 	protected function commandLike($context)
 	{
 		$this->processAnswer($context, 0, 1);
@@ -71,7 +90,12 @@ class BotLongevityParent extends BotLongevityBase
 		$this->processAnswer($context, 3, 3);
 	}
 
-	private function processAnswer($context, $actionIndex, $rating)
+	protected function commandAction4($context)
+	{
+		$this->processAnswer($context, 4, 4);
+	}
+
+	private function processAnswer($context, $actionIndex, $rating, $questionCallback = true)
 	{
 		Log::d("<pre>");
 		$chatInstance = $this->getChatInstance();
@@ -80,27 +104,44 @@ class BotLongevityParent extends BotLongevityBase
 		//$lang = $chatInstance->getLang($this->getConfig()->getLang());
 		$lang = $this->getConfig()->getLang();
 		$experiment = 0;
-		$messageId = $context->getTransport()->getRequest()->getMessageId();
+
+		$messageId = $context->getTransport()->getRequest()->getCallbackMessageId();
+		if (!$messageId) {
+			$messageId = $model->getLastMessageId($chatId);
+		}
+		//$this->sendText($messageId);
+		//$this->sendText($context->getCommand()->getRequestTextOrigin());
 
 		$replacedText = "Thank you!";
 		$contentGroup = 1;
 
-		$messageDb = $model->onAnswerRecieved($chatId, $messageId, $rating, $context->getCommand()->getRequestTextOrigin());
-		// Send callback result
-		$this->getTransport()->sendCallbackResult("");
+		try {
+			if ($questionCallback) {
+				$messageFromDb = $model->onCallbackAnswerRecieved($chatId, $messageId, $actionIndex, $rating, $context->getCommand()->getRequestTextOrigin());
+				// Send callback result
+				$this->getTransport()->sendCallbackResult("");
+			} else {
+				$messageFromDb = $model->onTextAnswerRecieved($chatId, $messageId, $context->getCommand()->getRequestTextOrigin());
+			}
+			//code...
+		} catch (\Throwable $th) {
+			//throw $th;
+			//$this->sendText($th->getMessage());
+		}
+		//$this->sendText("$chatId, $messageId, $rating");
 
-		if (!$messageDb) {
+		if (!$messageFromDb) {
 			return;
 		}
-		$contentGroup = $messageDb["contentGroup"];
-		$dialogIndex = $messageDb["contentIndex"];
+		$contentGroup = $messageFromDb["contentGroup"];
+		$dialogIndex = $messageFromDb["contentIndex"];
 		//$contentGroup = 1;
 		//$dialogIndex = 2;
 
 		//$contentConfigLang = $this->getConfig()->getContentConfigForGroupLang($contentGroup);
 		$contentConfigLang = $this->getDialogContent($experiment, $contentGroup, $lang);
 		//Log::d($contentConfigLang->getArray());
-		
+
 		$currentDialog = $contentConfigLang->getWrapped("items")->getWrapped($dialogIndex);
 		Log::d($currentDialog->getArray());
 		$currentDialogDefault = $contentConfigLang->getWrapped("default");
@@ -112,7 +153,7 @@ class BotLongevityParent extends BotLongevityBase
 		$response = TelegramResponse::createTextResponse($chatId, $replacedText);
 		//$response->set("reply_markup", $context->getConfig()->getText("kb_content_answer_edited"));
 		$response->set("message_id", $messageId);
-/*
+		/*
 		if ($contentGroup == 10) {
 			$response->setMethod("editMessageCaption");
 			$response->set("caption", $replacedText);
@@ -120,12 +161,14 @@ class BotLongevityParent extends BotLongevityBase
 			$response->setMethod("editMessageText");
 			$response->set("text", $replacedText);
 		}
-*/		
+*/
 		BotLog::log("processAnswer: " . json_encode($response->getArray()));
 		//$this->getTransport()->sendResponse($response);
-		
-		$response->setMethod("editMessageReplyMarkup");
-		$this->getTransport()->sendResponse($response);
+
+		if ($questionCallback) {
+			$response->setMethod("editMessageReplyMarkup");
+			$this->getTransport()->sendResponse($response);
+		}
 
 		$this->sendText($replacedText);
 	}

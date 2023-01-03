@@ -10,6 +10,7 @@ class TelegramRequest
 
 	private $callbackId;
 	private $messageId;
+	private $callbackMessageId;
 	private $chatId;
 
 	private $requestData;
@@ -73,6 +74,8 @@ class TelegramRequest
 		$this->callbackId = $this->requestCallback['id'];
 		$this->requestMessage = $this->requestCallback["message"];
 		$this->messageId = $this->requestMessage["message_id"];
+		$this->callbackMessageId = $this->messageId;
+
 		$this->chatId = $this->requestMessage["chat"]["id"];
 		$this->userName = $this->requestMessage["chat"]["username"];
 
@@ -128,6 +131,10 @@ class TelegramRequest
 	function getMessageId()
 	{
 		return $this->messageId;
+	}
+	function getCallbackMessageId()
+	{
+		return $this->callbackMessageId;
 	}
 	function getMessageChatId()
 	{
