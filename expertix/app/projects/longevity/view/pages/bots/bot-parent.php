@@ -11,7 +11,7 @@ use Project\Bot\BotLongevityParent;
 $isTest = true;
 //Log::setSilent(!$isTest);
 $configArr = include (__DIR__."/config/bot1.cfg.php");
-$config = new BotConfig($configArr, "ru");
+$config = new BotConfig($configArr, "en");
 
 //echo UUID::gen_uuid("123", 4);
 
@@ -19,8 +19,7 @@ if($isTest){
 	$transport = new TelegramTransportTest($config);
 	$bot = new BotLongevityParent($config, $transport);
 
-	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "2", "username" => "testuser1"], "text" => "like"]]);
-	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "2", "username" => "testuser1"], "text" => "dislike"]]);
+	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "like"]]);
 	
 	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "start"]]);
 	$bot->runFromArrayData(["message" => ["from" => [], "chat" => ["id" => "1", "username" => "testuser1"], "text" => "password"]]);

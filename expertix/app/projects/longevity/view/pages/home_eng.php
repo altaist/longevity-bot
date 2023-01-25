@@ -51,7 +51,7 @@ $view->component("header", ["title" => "Название проекта", "home_
 		<div class="row q-col-gutter-sm reverse ">
 			<div class="col-12 col-md-6 ">
 				<div class="animated fadeInRight">
-					<q-img src="img/lh/img1.jpg" class="rounded" height="400px" spinner-color="primary" spinner-size="82px"></q-img>
+					<q-img src="img/lh/new/1.jpg" class="rounded" height="400px" spinner-color="primary" spinner-size="82px"></q-img>
 
 				</div>
 			</div>
@@ -195,7 +195,7 @@ At the outcome participants will get basic tools and approaches to support their
 		<div class="my-0">
 			<div class="my-0 row q-col-gutter-lg">
 				<div class="col-12 col-md-6 text-h6">
-					<q-img src="img/lh/img2sm.jpg" class="rounded" height="300px" spinner-color="primary" spinner-size="82px"></q-img>
+					<q-img src="img/lh/new/2.jpg" class="rounded" height="300px" spinner-color="primary" spinner-size="82px"></q-img>
 				</div>
 				<div class="col-12 col-md-6 text-h6">
 					<div class="my-2 text-h4 text-center">Why empowering healthy behaviors?</div>
@@ -211,7 +211,7 @@ At the outcome participants will get basic tools and approaches to support their
 					<div>The more risk habits we incorporate in our routines the greater impact on our health.</div>
 				</div>
 				<div class="col-12 col-md-6 text-h6">
-					<q-img src="img/lh/img3sm.jpg" class="rounded" height="300px" spinner-color="primary" spinner-size="82px"></q-img>
+					<q-img src="img/lh/new/3.jpg" class="rounded" height="300px" spinner-color="primary" spinner-size="82px"></q-img>
 				</div>
 			</div>
 			<div class="my-5 row q-col-gutter-lg reverse">
@@ -222,7 +222,7 @@ At the outcome participants will get basic tools and approaches to support their
 
 				</div>
 				<div class="col-12 col-md-6 text-h6">
-					<q-img src="img/lh/img4sm.jpg" class="rounded" height="300px" spinner-color="primary" spinner-size="82px"></q-img>
+					<q-img src="img/lh/new/4.jpg" class="rounded" height="300px" spinner-color="primary" spinner-size="82px"></q-img>
 				</div>
 			</div>
 
@@ -237,7 +237,7 @@ At the outcome participants will get basic tools and approaches to support their
 			<div class="row q-col-gutter-md mt-3">
 				<div class="col-12 col-md-6 p-md-2">
 					<center><img src="img/med/nedelskiy.jpg" height="300" style="border-radius: 50%;">
-						<div class="text-h5 mt-3">Vitaliy Nedelskiy</div>
+						<div class="text-h5 mt-3">Vitaly Nedelskiy</div>
 						<div class="text-h6 mt-3">Founder, President</div>
 					</center>
 					<div>
@@ -245,7 +245,7 @@ At the outcome participants will get basic tools and approaches to support their
 				</div>
 				<div class="col-12 col-md-6 p-md-2">
 					<center><img src="img/med/uliana.jpg" height="300" style="border-radius: 50%;">
-						<div class="text-h5 mt-3">Ulliana Shchelgacheva</div>
+						<div class="text-h5 mt-3">Uliana Shchelgacheva</div>
 						<div class="text-h6 mt-3">Founder, CEO</div>
 					</center>
 					<ul>
@@ -281,12 +281,18 @@ At the outcome participants will get basic tools and approaches to support their
 	<div id="about" class="my-3">
 		<div class="text-h4 color">Our partners</div>
 		<hr>
-		<div class="row q-col-gutter-sm justify-center">
-			<div class="col-12 col-md-4 text-center">
-				<a href="https://swissinsurtech.com/start-ups/" target="top"><img src="img/lh/swiss.png" width="200"></a>
-			</div>
-			<div class="col-12 col-md-4 text-center">
+		<div class="row q-col-gutter-lg justify-center q-ma-md">
+			<div class="col-12 col-md-6 text-center">
 				<a href="https://www.euratechnologies.com/" target="top"><img src="img/lh/euro.svg" width="200"></a>
+			</div>
+			<div class="col-12 col-md-6 text-center">
+				<a href="https://www.eurasante.com/" target="top"><img src="img/lh/es.svg" width="200"></a>
+			</div>
+			<div class="col-12 col-md-6 text-center">
+				<a href="https://www.eurasenior.fr/" target="top"><img src="img/lh/eurasenior.png" width="200"></a>
+			</div>
+			<div class="col-12 col-md-6 text-center">
+				<a href="https://swissinsurtech.com/start-ups/" target="top"><img src="img/lh/swiss.png" width="200"></a>
 			</div>
 		</div>
 	</div>
@@ -301,7 +307,7 @@ At the outcome participants will get basic tools and approaches to support their
 	</div>
 	<div class="mt-0 mb-0 p-3 menu">
 		<div class="row q-col-gutter-sm">
-			<div class="col-12 col-md-4 text-left">&copy; Longevity Hub, 2022</div>
+			<div class="col-12 col-md-4 text-left">&copy; Longevity Hub, 2023</div>
 
 		</div>
 	</div>

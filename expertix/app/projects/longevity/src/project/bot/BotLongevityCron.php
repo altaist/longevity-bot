@@ -84,6 +84,10 @@ class BotLongevityCron extends BotLongevityBase
 			// KB
 //			$kb = $dialogItem->get("kb", $dialogDefaults->get("kb", null));
 			$kb = $this->createKb($dialogItem, $dialogDefaults, $chat);
+			$questionType = 0;
+			if($kb){
+				$questionType = 1;
+			}
 			$response->set("reply_markup", $kb);
 			Log::d("Content to send: text='$text'   img='$img' ", $kb);
 
@@ -93,7 +97,7 @@ class BotLongevityCron extends BotLongevityBase
 				$result = $sendResult["result"];
 				$messageId = $result["message_id"];
 
-				$model->saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentIndex, $chatContentContextArr, $tags, $response->getText(), $response->getPhoto());
+				$model->saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentIndex, $questionType, $chatContentContextArr, $tags, $response->getText(), $response->getPhoto());
 			}
 
 			Log::d("Before saving:",  $chatContentContextArr);
@@ -153,7 +157,7 @@ class BotLongevityCron extends BotLongevityBase
 		}
 
 		$kb = [];
-		$kb['inline_keyboard'] = [$buttons];
+		$kb['inline_keyboard'] = $buttons;
 		return $kb;
 	}
 
@@ -175,7 +179,12 @@ class BotLongevityCron extends BotLongevityBase
 		for ($i = 0; $i < $count; $i++) {
 			$item = $actionsArr[$i];
 			if (is_string($item)) {
-				$buttons[] = ["text" => $item, "callback_data" => $commands[$i]];
+				$text = trim($item);
+				if(strlen($text)<2){
+					$buttons[] = [["text" => $text, "callback_data" => $commands[$i]]];
+				}else{
+					$buttons[] = [["text" => $text, "callback_data" => $commands[$i]]];
+				}
 			} elseif (is_array($item) && count($item) > 1) {
 				$buttons[] = ["text" => $item[0], "callback_data" => $item[1]];
 			}
@@ -202,18 +211,7 @@ class BotLongevityCron extends BotLongevityBase
 	}
 
 
-	protected function sendPreparedResponse($chatId, $contentGroupKey, $contentIndex, $tags, $response)
-	{
-		$model = $this->getChatModel();
 
-		$sendResult = $this->getTransport()->sendResponse($response);
-		if ($sendResult && isset($sendResult["ok"]) && isset($sendResult["result"])) {
-			$result = $sendResult["result"];
-			$messageId = $result["message_id"];
-
-			$model->saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentIndex, $tags, $response->getText(), $response->getPhoto());
-		}
-	}
 
 	public function startCheckingAlarm()
 	{

@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS `bot_chat_message` (
   `contentId` int(11) DEFAULT NULL,
   `contentGroup` int(11) DEFAULT NULL,
   `contentIndex` int(11) DEFAULT NULL,
+  `questionType` tinyint(2) DEFAULT 0,
 	`category` varchar(256) null,
 	`tags` varchar(1024) null,
 	`messageText` varchar(1024) null,

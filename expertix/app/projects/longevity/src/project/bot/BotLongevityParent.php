@@ -116,12 +116,13 @@ class BotLongevityParent extends BotLongevityBase
 		$contentGroup = 1;
 
 		try {
+			$commandText = $context->getCommand()->getRequestTextOrigin();
 			if ($questionCallback) {
-				$messageFromDb = $model->onCallbackAnswerRecieved($chatId, $messageId, $actionIndex, $rating, $context->getCommand()->getRequestTextOrigin());
+				$messageFromDb = $model->onCallbackAnswerRecieved($chatId, $messageId, $actionIndex, $rating, $commandText);
 				// Send callback result
 				$this->getTransport()->sendCallbackResult("");
 			} else {
-				$messageFromDb = $model->onTextAnswerRecieved($chatId, $messageId, $context->getCommand()->getRequestTextOrigin());
+				$messageFromDb = $model->onTextAnswerRecieved($chatId, $messageId, $commandText);
 			}
 			//code...
 		} catch (\Throwable $th) {
@@ -186,12 +187,14 @@ class BotLongevityParent extends BotLongevityBase
 				$answersArr = explode(";", $answersSrc);
 			}
 
-			if (!is_array($answersArr) || count($answersArr) <= 1) {
+			if (!is_array($answersArr)) {
 				$text = $answersSrc;
 			} else {
 
 				if ($actionIndex >= 0 && $actionIndex < count($answersArr)) {
 					$text = $answersArr[$actionIndex];
+				}else{
+					$text = $answersArr[0];
 				}
 			}
 		}

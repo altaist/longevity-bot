@@ -171,15 +171,15 @@ class ChatModel extends BaseBotModel
 
 		return DB::getRow("select * from bot_chat_message where chatId=? and messageId=?", [$chatId, $messageId]);
 	}
-	public function saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentIndex, $contentConfig, $tags, $messageText, $messageImg)
+	public function saveSendedMessage($chatId, $messageId, $contentGroupKey, $contentIndex, $questionType, $contentConfig, $tags, $messageText, $messageImg)
 	{
 		$contentConfigStr = json_encode($contentConfig);
 		$sql = "update bot_chat set state=2, contentConfig=?, dateLastPush=NOW(), dateLastAnswer=(if (state=1, NOW(), dateLastAnswer)), isNeedUpdate=0 where chatId=?";
 		$params = [$contentConfigStr, $chatId];
 		DB::set($sql, $params);
 
-		$sql = "insert into bot_chat_message (chatId, messageId, contentGroup, contentIndex, tags, messageText, messageImg) values(?,?,?,?,?,?,?)";
-		$params = [$chatId, $messageId, $contentGroupKey, $contentIndex, $tags, $messageText, $messageImg];
+		$sql = "insert into bot_chat_message (chatId, messageId, contentGroup, contentIndex, questionType, tags, messageText, messageImg) values(?,?,?,?,?,?,?,?)";
+		$params = [$chatId, $messageId, $contentGroupKey, $contentIndex, $questionType, $tags, $messageText, $messageImg];
 		BotLog::log($params);
 
 		Log::d("Saved for $chatId: ", $contentConfigStr);
@@ -227,9 +227,9 @@ class ChatModel extends BaseBotModel
 	public function getChatsForAlarm()
 	{
 		$period = "MINUTE";
-		$minAlarmPeriod1 = 1;
-		$minAlarmPeriod2 = 2;
-		$minAlarmNotifyPeriod = 1;
+		$minAlarmPeriod1 = 30;
+		$minAlarmPeriod2 = 60;
+		$minAlarmNotifyPeriod = 30;
 
 		//$sql = "select * from bot_chat where now()-dateLastPush>100 order by chatId, dateLastPush desc";
 		$sql = "update bot_chat set alarmLevel=if(TIMESTAMPDIFF($period, dateLastAnswer, now())>=$minAlarmPeriod2, 2, if(TIMESTAMPDIFF($period, dateLastAnswer, now())>=$minAlarmPeriod1,1,0)) where state=2 and TIMESTAMPDIFF($period, dateLastAnswer, now())>=$minAlarmPeriod1";

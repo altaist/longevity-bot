@@ -16,6 +16,7 @@ use Project\Bot\Model\ChatModel;
 abstract class BotLongevityBase extends BotManager
 {
 	private $chatInstance = null;
+	private $isChatAutoCreated = false;
 
 	protected function onBeforeRun(BotCommand $command)
 	{
@@ -23,7 +24,7 @@ abstract class BotLongevityBase extends BotManager
 		$chatId = $this->getChatId();
 		//Log::d("Command method: {$command->getMethod()}. Bot chat id=$chatId");
 
-		$this->prepareChatInstance($this, false);
+		$this->autoCreateChatInstance($this);
 		$this->patchUserName();
 		// Update chat activity
 		$model = $this->getChatModel();
@@ -41,37 +42,46 @@ abstract class BotLongevityBase extends BotManager
 		$chatId = $this->getChatId();
 		$model->updateUserName($chatId, $userName);
 	}
-	protected function commandStart($context)
+
+	protected function autoLoadChatInstance($context)
 	{
-		$this->prepareChatInstance($context, true);
+		$chatInstance = $context->getChatInstance();
+		if ($chatInstance) {
+			return $chatInstance;
+		}
+
+		$chatInstance = $this->loadChatInstance($context);
+		$this->setChatInstance($chatInstance);
+		return $this->getChatInstance();
 	}
-	protected function prepareChatInstance($context, $isShowAlreadyExists)
+
+	protected function loadChatInstance($context){
+		$chatId = $context->getChatId();
+		$chatInstance = $this->getChatFromDb($chatId);
+		return $chatInstance;
+	}
+	protected function createChatInstance($context){
+		$chatId = $context->getChatId();
+		$chatInstance = $this->createChatDb($chatId);
+		return $chatInstance;
+	}
+	protected function autoCreateChatInstance($context)
 	{
 //		print_r("Checking chatInstance<br>");
 
-		$chatInstance = $context->getChatInstance();
+		$chatInstance = $this->autoloadChatInstance($context);
 		if ($chatInstance) {
-			if ($isShowAlreadyExists) {
-				$context->sendText($context->getConfig()->getText("chat_created_already"));
-			}
-			return;
+			return $chatInstance;
 		}
 
-		$chatId = $context->getChatId();
-//		print_r("Checking chat from db for chatId=$chatId<br>");
-		$chatInstance = $this->getChatFromDb($chatId);
-
-		if ($chatInstance) {
+		$chatInstance = $this->createChatInstance($context);
+		if($chatInstance){
+			$this->setIsChatAutoCreated(true);
 			$this->setChatInstance($chatInstance);
-			if ($isShowAlreadyExists) {
-				$context->sendText($context->getConfig()->getText("chat_created_already"));
-			}
-			return;
 		}
-//		print_r("Creating chatInstance for chatId=$chatId<br>");
-		$chatInstance = $this->createChatDb($chatId);
-		$this->setChatInstance($chatInstance);
-		$this->sendChatCreationResult($chatInstance);
+		
+		return $this->getChatInstance();
+
 	}
 
 	protected abstract function sendChatCreationResult(ChatInstance $chatInstance);
@@ -110,6 +120,38 @@ abstract class BotLongevityBase extends BotManager
 			return null;
 		}
 		return new ChatInstance($chat);
+	}
+	protected function getIsChatAutoCreated(){
+		return $this->isChatAutoCreated;
+	}
+	protected function setIsChatAutoCreated($f){
+		$this->isChatAutoCreated = $f;
+	}
+	protected function commandStart($context)
+	{
+		$chatInstance = $this->getChatInstance();
+		if($chatInstance && $this->getIsChatAutoCreated()){
+			// Chat already created by 'autocreated' function. Just send results
+			$this->sendChatCreationResult($chatInstance);
+			return;
+		}
+		
+		if($chatInstance){
+			// Chat was autoloaded, but not autocreated. Chat already exists
+			$context->sendText($context->getConfig()->getText("chat_created_already"));
+			return;
+		}
+
+		// Try to create chat
+		$chatInstance = $this->createChatInstance($context);
+		if($chatInstance){
+			$this->setChatInstance($chatInstance);
+			$this->sendChatCreationResult($chatInstance);
+			return;
+		}
+
+		throw new BotException("Chat cannot by created", 0);
+		
 	}
 	protected function commandStop($context)
 	{
